@@ -1,9 +1,9 @@
-    import re
+import re
 import requests
 import telebot
 import time
 
-BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0"
+BOT_TOKEN = "ТВОЙ_ТОКЕН_СЮДА"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 def check_telegram(username):
@@ -75,8 +75,7 @@ def check_social(username):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Пришлите юзернейм для проверки (без @).")
-
-@bot.message_handler(func=lambda m: True)
+    @bot.message_handler(func=lambda m: True)
 def handle_username(message):
     username = message.text.strip().lower()
     if not username:
@@ -112,7 +111,7 @@ def handle_username(message):
             answer += f"   Instagram: {'свободен' if soc.get('instagram') is True else 'занят' if soc.get('instagram') is False else 'ошибка'}\n"
             answer += f"   Twitter: {'свободен' if soc.get('twitter') is True else 'занят' if soc.get('twitter') is False else 'ошибка'}\n"
         answer += "\n"
-    if not any(r.get('available') for r in results):
+        if not any(r.get('available') for r in results):
         answer += "🔍 Все заняты. Ищу свободный...\n"
         found = None
         for i in range(1, 100):
