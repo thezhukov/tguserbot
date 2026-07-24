@@ -5,7 +5,7 @@ from telebot import types
 import time
 
 # ===== Конфигурация =====
-BOT_TOKEN = "8940503804:АAHQWBBipgYujzl10s3USpWbDJCap-WPFv0" # замените
+BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0" # замените
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # ===== Проверка в Telegram =====
