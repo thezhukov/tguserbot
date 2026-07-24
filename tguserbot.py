@@ -1,14 +1,13 @@
 import re
 import requests
 import telebot
-from telebot import types
 import time
 
-# ===== Конфигурация =====
-BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0" # замените
+# ===== КОНФИГУРАЦИЯ =====
+BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0"  # замени на реальный токен
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# ===== Проверка в Telegram =====
+# ===== ПРОВЕРКА В TELEGRAM =====
 def check_telegram(username):
     url = f"https://t.me/{username}"
     try:
@@ -21,7 +20,7 @@ def check_telegram(username):
     except:
         return None
 
-# ===== Проверка во Fragment =====
+# ===== ПРОВЕРКА В FRAGMENT =====
 def check_fragment(username):
     try:
         r = requests.get(f"https://fragment.com/api/auction/username/{username}", timeout=5)
@@ -34,16 +33,16 @@ def check_fragment(username):
     except:
         return None
 
-# ===== Проверка длины и допустимых символов =====
+# ===== ПРОВЕРКА ДЛИНЫ И СИМВОЛОВ =====
 def validate_username(username):
     if not re.match(r'^[a-zA-Z0-9_]{5,32}$', username):
-        return False, "Недопустимая длина или символы"
+        return False, "Недопустимая длина или символы (только латиница, цифры, _, 5-32)"
     reserved = ["admin", "support", "telegram", "bot", "fragment", "root", "system"]
     if username.lower() in reserved:
         return False, "Зарезервированное слово"
     return True, "ОК"
 
-# ===== Дополнительная проверка в соцсетях =====
+# ===== ПРОВЕРКА В INSTAGRAM И TWITTER =====
 def check_social(username):
     results = {}
     try:
@@ -58,7 +57,7 @@ def check_social(username):
         results['twitter'] = None
     return results
 
-# ===== Основная проверка =====
+# ===== ОСНОВНАЯ ПРОВЕРКА =====
 def full_check(username):
     report = {}
     report['input'] = username
@@ -87,11 +86,12 @@ def full_check(username):
     report['details'] = f"TG: {tg}, Fragment: {frag}, Соцсети: {social}"
     return report
 
-# ===== Обработчики бота =====
+# ===== ОБРАБОТЧИК КОМАНДЫ /start =====
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Пришлите юзернейм для проверки (без @).\nПример: myusername")
+    bot.reply_to(message, "👋 Пришлите юзернейм для проверки (без @).\nПример: myusername")
 
+# ===== ОБРАБОТЧИК ЛЮБОГО СООБЩЕНИЯ =====
 @bot.message_handler(func=lambda m: True)
 def handle_username(message):
     username = message.text.strip().lower()
@@ -99,8 +99,14 @@ def handle_username(message):
         bot.reply_to(message, "Введите хотя бы один символ.")
         return
 
+    # Убираем @, если пользователь его ввёл
+    if username.startswith("@"):
+        username = username[1:]
+
     base = username
     variants = []
+
+    # Генерируем варианты, если длина не подходит
     if len(base) < 5:
         variants.append(base + "1" * (5 - len(base)))
     elif len(base) > 32:
@@ -109,9 +115,11 @@ def handle_username(message):
     else:
         variants.append(base)
 
+    # Добавляем суффиксы
     for suffix in ["_", "1", "2026", "bot"]:
         if len(base + suffix) <= 32 and len(base + suffix) >= 5:
             variants.append(base + suffix)
+
     variants = list(set(variants))
 
     results = []
@@ -119,12 +127,15 @@ def handle_username(message):
         res = full_check(v)
         results.append(res)
 
-    answer = "📊 Результаты проверки:\n\n"
+    answer = "📊 РЕЗУЛЬТАТЫ ПРОВЕРКИ:\n\n"
     for r in results:
         status = "✅ СВОБОДЕН" if r.get('available') else "❌ ЗАНЯТ"
         answer += f"@{r['input']} → {status}\n"
         answer += f"   Валидация: {r['validation_msg']}\n"
-        answer += f"   Telegram: {'свободен' if r['telegram'] is True else 'занят' if r['telegram'] is False else 'ошибка'}\n"
+        answer += f"   Telegram: {'свободен' if r['telegram'] is True else 'занят' if r[
+
+
+egram'] is False else 'ошибка'}\n"
         answer += f"   Fragment: {'свободен' if r['fragment'] is True else 'занят' if r['fragment'] is False else 'ошибка'}\n"
         if r.get('social'):
             soc = r['social']
@@ -132,9 +143,9 @@ def handle_username(message):
             answer += f"   Twitter: {'свободен' if soc.get('twitter') is True else 'занят' if soc.get('twitter') is False else 'ошибка'}\n"
         answer += "\n"
 
-    # Если все заняты – предлагаем ближайший свободный (поиск перебором)
+    # Если все заняты — ищем свободный
     if not any(r.get('available') for r in results):
-        answer += "🔍 Все проверенные варианты заняты. Ищу свободный близкий вариант...\n"
+        answer += "🔍 Все варианты заняты. Ищу свободный близкий вариант...\n"
         found = None
         test_base = base
         for i in range(1, 100):
@@ -156,7 +167,13 @@ def handle_username(message):
 
     bot.reply_to(message, answer)
 
-# ===== Запуск =====
+# ===== ЗАПУСК =====
 if __name__ == "__main__":
     print("Бот запущен...")
-    bot.polling(non_stop=True)
+    while True:
+        try:
+            bot.polling(non_stop=True, interval=0, timeout=20)
+        except Exception as e:
+            print(f"Ошибка: {e}. Перезапуск через 5 секунд...")
+            time.sleep(5)'tel
+   
