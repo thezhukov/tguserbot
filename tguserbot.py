@@ -3,7 +3,7 @@ import requests
 import telebot
 import time
 
-BOT_TOKEN = "ТВОЙ_ТОКЕН_СЮДА"
+BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 def check_telegram(username):
