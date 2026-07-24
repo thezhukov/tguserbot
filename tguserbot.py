@@ -52,6 +52,26 @@ def check_social(username):
         results['twitter'] = None
     return results
     def full_check(username):
+      report = {}
+    report['input'] = username
+    valid, msg = validate_username(username)
+    report['valid'] = valid
+    report['validation_msg'] = msg
+    if not valid:
+        report['available'] = False
+        report['details'] = "Не прошёл валидацию"
+        return report
+    tg = check_telegram(username)
+    frag = check_fragment(username)
+    social = check_social(username)
+    report['telegram'] = tg
+    report['fragment'] = frag
+    report['social'] = social
+    available = (tg is True or tg is None) and (frag is True or frag is None) and valid
+    report['available'] = available
+    report['details'] = f"TG: {tg}, Fragment: {frag}, Соцсети: {social}"
+    return report
+def full_check(username):
     report = {}
     report['input'] = username
     valid, msg = validate_username(username)
@@ -72,12 +92,14 @@ def check_social(username):
     report['details'] = f"TG: {tg}, Fragment: {frag}, Соцсети: {social}"
     return report
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start']
+)
 def send_welcome(message):
     bot.reply_to(message, "Пришлите юзернейм для проверки (без @).")
+
     @bot.message_handler(func=lambda m: True)
-def handle_username(message):
-    username = message.text.strip().lower()
+    def handle_username(message):
+     username = message.text.strip().lower()
     if not username:
         bot.reply_to(message, "Введите хотя бы один символ.")
         return
@@ -112,7 +134,7 @@ def handle_username(message):
             answer += f"   Twitter: {'свободен' if soc.get('twitter') is True else 'занят' if soc.get('twitter') is False else 'ошибка'}\n"
         answer += "\n"
         if not any(r.get('available') for r in results):
-        answer += "🔍 Все заняты. Ищу свободный...\n"
+            answer += "🔍 Все заняты. Ищу свободный...\n"
         found = None
         for i in range(1, 100):
             candidate = base + str(i)
