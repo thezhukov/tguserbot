@@ -3,7 +3,7 @@ import requests
 import telebot
 import time
 
-BOT_TOKEN = "8940503804:AAHQWBBipgYujzllOs3USpWbDJCap-WPFv0"
+BOT_TOKEN = "ТВОЙ_ТОКЕН_СЮДА"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 def check_telegram(username):
@@ -37,7 +37,6 @@ def validate_username(username):
     if username.lower() in reserved:
         return False, "Зарезервированное слово"
     return True, "ОК"
-
 def check_social(username):
     results = {}
     try:
@@ -51,26 +50,7 @@ def check_social(username):
     except:
         results['twitter'] = None
     return results
-    def full_check(username):
-      report = {}
-    report['input'] = username
-    valid, msg = validate_username(username)
-    report['valid'] = valid
-    report['validation_msg'] = msg
-    if not valid:
-        report['available'] = False
-        report['details'] = "Не прошёл валидацию"
-        return report
-    tg = check_telegram(username)
-    frag = check_fragment(username)
-    social = check_social(username)
-    report['telegram'] = tg
-    report['fragment'] = frag
-    report['social'] = social
-    available = (tg is True or tg is None) and (frag is True or frag is None) and valid
-    report['available'] = available
-    report['details'] = f"TG: {tg}, Fragment: {frag}, Соцсети: {social}"
-    return report
+
 def full_check(username):
     report = {}
     report['input'] = username
@@ -91,20 +71,19 @@ def full_check(username):
     report['available'] = available
     report['details'] = f"TG: {tg}, Fragment: {frag}, Соцсети: {social}"
     return report
-
-@bot.message_handler(commands=['start']
-)
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Пришлите юзернейм для проверки (без @).")
+    bot.reply_to(message, "Пришлите юзернейм для проверки (без @).\nПример: myusername")
 
-    @bot.message_handler(func=lambda m: True)
-    def handle_username(message):
-     username = message.text.strip().lower()
+@bot.message_handler(func=lambda m: True)
+def handle_username(message):
+    username = message.text.strip().lower()
     if not username:
         bot.reply_to(message, "Введите хотя бы один символ.")
         return
     if username.startswith("@"):
         username = username[1:]
+
     base = username
     variants = []
     if len(base) < 5:
@@ -114,14 +93,16 @@ def send_welcome(message):
         variants.append(base)
     else:
         variants.append(base)
+
     for suffix in ["_", "1", "2026", "bot"]:
         if len(base + suffix) <= 32 and len(base + suffix) >= 5:
             variants.append(base + suffix)
+
     variants = list(set(variants))
     results = []
     for v in variants:
         results.append(full_check(v))
-    answer = "📊 РЕЗУЛЬТАТЫ:\n\n"
+        answer = "📊 РЕЗУЛЬТАТЫ ПРОВЕРКИ:\n\n"
     for r in results:
         status = "✅ СВОБОДЕН" if r.get('available') else "❌ ЗАНЯТ"
         answer += f"@{r['input']} → {status}\n"
@@ -133,8 +114,9 @@ def send_welcome(message):
             answer += f"   Instagram: {'свободен' if soc.get('instagram') is True else 'занят' if soc.get('instagram') is False else 'ошибка'}\n"
             answer += f"   Twitter: {'свободен' if soc.get('twitter') is True else 'занят' if soc.get('twitter') is False else 'ошибка'}\n"
         answer += "\n"
-        if not any(r.get('available') for r in results):
-            answer += "🔍 Все заняты. Ищу свободный...\n"
+
+    if not any(r.get('available') for r in results):
+        answer += "🔍 Все варианты заняты. Ищу свободный близкий вариант...\n"
         found = None
         for i in range(1, 100):
             candidate = base + str(i)
@@ -147,9 +129,10 @@ def send_welcome(message):
                 found = candidate
                 break
         if found:
-            answer += f"✅ Рекомендую: @{found} — свободен."
+            answer += f"✅ Рекомендую: @{found} — свободен во всех проверках."
         else:
-            answer += "❌ Свободный не найден."
+            answer += "❌ Свободный вариант не найден в пределах 100 переборов."
+
     bot.reply_to(message, answer)
 
 if __name__ == "__main__":
